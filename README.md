@@ -1,3 +1,3 @@
 #rpb2023
 
-This is project for team #1
+This is project repo for team #1
