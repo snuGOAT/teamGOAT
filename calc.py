@@ -17,4 +17,4 @@ if __name__=='__main__':
 	print('%d + %d = %d'%(x,y, add(x,y)))
 	print('%d - %d = %d'%(x,y, sub(x,y)))
 	print('%d * %d = %d'%(x,y, mul(x,y)))
-	print('%d / %d = %d'%(x,y, div(x,y)))
+	print('%d / %d = %0.3f'%(x,y, div(x,y)))
