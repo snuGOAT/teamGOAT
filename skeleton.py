@@ -26,7 +26,7 @@ class DetermineColor:
             msg = Header()
             msg = data.header
             msg.frame_id = '0'  # default: STOP
-            """
+		
             self.count+=1
             if self.count>300 and self.count<600:
             	msg.frame_id = '+1'
@@ -38,7 +38,7 @@ class DetermineColor:
       
             elif self.count > 1200 and self.count < 1500:
             	msg.frame_id = '+1'
-            """
+
             # determine background color
             # TODO
             # determine the color and assing +1, 0, or, -1 for frame_id
