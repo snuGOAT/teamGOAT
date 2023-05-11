@@ -2,9 +2,13 @@
 import rospy
 import numpy as np
 import cv2
+import time
+import math
 from sensor_msgs.msg import Image, CompressedImage
 from cv_bridge import CvBridge, CvBridgeError
 from std_msgs.msg import Header
+
+np.seterr(divide='ignore', invalid='ignore') 
 
 class DetermineColor:
     def __init__(self):
@@ -16,30 +20,32 @@ class DetermineColor:
         self.result = [0,0,0] # R B None
 
     def distance(self, A):
-        R = [0, 0, 255] # BGR
-        B = [255, 0, 0] # BGR
-        G = [0, 255, 0]
-        Y = [0, 255/np.sqrt(2), 255/np.sqrt(2)]
-        Rad = 250*250/2 # 300aseo jaldam
-        
-        disR=np.sum( [(int(R[i])-int(A[i]))**2 for i in range(3)] )
-        disB=np.sum( [(int(B[i])-int(A[i]))**2 for i in range(3)] )
-        disG=np.sum( [(int(G[i])-int(A[i]))**2 for i in range(3)] )
-        #print(disR)
-        '''
-        if disR > disB:
-            self.result[1] += 1
+        A = A/255 #BGR    (수정한 부분 1)
+        V = np.max(A)
+        S = (V-np.min(A)) / V  if V!=0 else 0
+
+        if(V != 0):
+            if V == A[2]:
+                H = 60 * (A[1]-A[0]) / (V - np.min(A))
+            elif V == A[1]:
+                H = 120 + 60 * (A[0]-A[2]) / (V - np.min(A))
+            else:
+                H = 240 + 60 * (A[2]-A[1]) / (V - np.min(A))
         else:
-            self.result[0] += 1		
-        '''
-        if disR <= disB and disR <= disG: 
+            H=361
+
+        H= H+360 if H<0 else H
+        
+        #print(H,S,V)
+        
+        if 0<=H<=30 or 330<=H<=360  : #red
             self.result[0] += 1
 
-        elif disB <= disG : 
+        elif 190<=H<=270 : #blue
             self.result[1] += 1
-       
         else :
-            self.result[2] += 1
+            if A[0]!=0 or A[1]!=0 or A[2]!=0: 
+                self.result[2] += 1
            
 
     def callback(self, data):
@@ -60,21 +66,26 @@ class DetermineColor:
             # 여기서 시작.
             self.result = [0, 0, 0]
             #resize_img = cv2.resize(image, (300, 500)) # 이미지 크기 확인.(해야됨) 480 640
-            image2 = image[200:400][50:300]
-            print(image2[1])
-            resize_img = cv2.resize(image2, (0,0), fx=0.5,fy=0.5)
-            #print(resize_img) 
-            #print(resize_img)
             
+            img = cv2.resize(image, dsize=(0,0), fx=0.3, fy=0.3)
+            N=int(len(img)/13) # 숫자는 조정 필요
             
-            cv2.imshow('Image',image2)
+            rc = (N,N,len(img)-N,len(img[0])-N)
+            mask = np.zeros(img.shape[:2],np.uint8)  
+
+            cv2.grabCut(img, mask, rc, None, None, 3, cv2.GC_INIT_WITH_RECT)
+            mask2 = np.where((mask==2)|(mask==0),0,1).astype('uint8')
+            resize_img = img * mask2[:,:,np.newaxis]
+        
+            
+            cv2.imshow('Image',resize_img)
             
             for i in range(len(resize_img)) :
                 for j in range(len(resize_img[0])) :
                     self.distance(resize_img[i][j]) # 함수 실행 어케함?
                     
             #print(np.sum(resize_img) / (len(resize_img)*len(resize_img[0])))
-            print(self.result)
+            #print(self.result)
                              
             max = np.max(self.result)
             if max == self.result[0] : 
