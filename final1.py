@@ -33,7 +33,7 @@ class DetermineColor:
             # DO NOT DELETE THE BELOW THREE LINES!
             msg = Header()
             msg = data.header
-            msg.frame_id = '0'  # default: STOP
+            #msg.frame_id = '0'  # default: STOP
 
             # 여기서 시작.
             self.result = [0, 0, 0]
