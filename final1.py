@@ -43,7 +43,7 @@ class DetermineColor:
             N=int(len(img)/25) # 숫자는 조정 필요
             
             
-            rc = (N,N,len(img),len(img[0])-N-20)
+            rc = (N,N,len(img),len(img[0])-N)
             mask = np.zeros(img.shape[:2],np.uint8)  
 
             cv2.grabCut(img, mask, rc, None, None, 3, cv2.GC_INIT_WITH_RECT)
@@ -68,7 +68,7 @@ class DetermineColor:
                     else:
                         H=361
                         H= H+360 if H<0 else H
-                    if 0<=H<=32 or 330<=H<=360  : #red
+                    if 0<=H<=38 or 330<=H<=360  : #red
                         self.result[0] += 1
                     elif 190<=H<=270 : #blue
                         self.result[1] += 1
