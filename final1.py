@@ -85,13 +85,13 @@ class DetermineColor:
             max = np.max(self.result)
             if max == self.result[0] : 
                 msg.frame_id = '-1'
-                print('red', self.result)
+                #print('red', self.result)
             elif max == self.result[1] :
                 msg.frame_id = '+1'
-                print('blue', self.result)
+                #print('blue', self.result)
             else : 
                 msg.frame_id = '0'
-                print('None', self.result)
+                #print('None', self.result)
 
             # determine background color
             # TODO
