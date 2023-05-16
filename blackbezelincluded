@@ -1,0 +1,59 @@
+import rospy
+import rosbag
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge
+import cv2
+import numpy as np
+
+class ImageProcessor:
+    def __init__(self):
+        self.bridge = CvBridge()
+        self.result_pub = rospy.Publisher('result_topic', Int32, queue_size=1)
+
+    def process_bag_file(self, bag_file):
+        bag = rosbag.Bag(bag_file)
+        for topic, msg, t in bag.read_messages(topics=['/image_topic']):
+            image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+
+            # Define the region of interest for the black bezel
+            bezel_roi = image[10:50, 10:50]
+
+            # Get the dominant color in the black bezel
+            dominant_color = self.get_dominant_color(bezel_roi)
+
+            # Publish the result
+            self.result_pub.publish(dominant_color)
+
+        bag.close()
+
+    def get_dominant_color(self, image):
+        # Define color ranges for blue and red
+        blue_lower = np.array([100, 0, 0], dtype=np.uint8)
+        blue_upper = np.array([255, 50, 50], dtype=np.uint8)
+        red_lower = np.array([0, 0, 100], dtype=np.uint8)
+        red_upper = np.array([50, 50, 255], dtype=np.uint8)
+
+        # Convert image to the HSV color space
+        hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
+        # Create binary masks for blue and red colors
+        blue_mask = cv2.inRange(hsv_image, blue_lower, blue_upper)
+        red_mask = cv2.inRange(hsv_image, red_lower, red_upper)
+
+        # Count the number of pixels for each color
+        blue_pixels = cv2.countNonZero(blue_mask)
+        red_pixels = cv2.countNonZero(red_mask)
+
+        # Compare pixel counts and return the corresponding value
+        if blue_pixels > red_pixels:
+            return 1
+        elif red_pixels > blue_pixels:
+            return -1
+        else:
+            return 0
+
+if _name_ == '_main_':
+    rospy.init_node('image_processor_node')
+    processor = ImageProcessor()
+    bag_file = 'path_to_your_bag_file.bag'
+    processor.process_bag_file(bag_file)
