@@ -1,0 +1,40 @@
+import rospy
+import rosbag
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge
+import numpy as np
+
+# Callback function to process each image frame
+def image_callback(msg):
+    bridge = CvBridge()
+    cv_image = bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+    height, width, _ = cv_image.shape
+
+    blue_pixels = np.sum(cv_image[:, :, 0])  # Sum of blue channel values
+    red_pixels = np.sum(cv_image[:, :, 2])   # Sum of red channel values
+
+    if blue_pixels > red_pixels:
+        print(1)  # Blue pixel is the most dominant
+    elif red_pixels > blue_pixels:
+        print(-1)  # Red pixel is the most dominant
+    else:
+        print(0)  # Neither blue nor red pixel is the most dominant
+
+# Initialize ROS node
+rospy.init_node('color_detection')
+
+# Specify the bag file path
+bag_path = '/path/to/your/bag/file.bag'
+
+# Open the bag file
+bag = rosbag.Bag(bag_path)
+
+# Get the topic for the image messages
+image_topic = '/your/image/topic'
+
+# Iterate through the bag file and process each image frame
+for topic, msg, t in bag.read_messages(topics=[image_topic]):
+    image_callback(msg)
+
+# Close the bag file
+bag.close()
